@@ -1,115 +1,109 @@
-var userPaddle, computerPaddle, computerScore, playerScore, gameState, ball,scoreSound, wall_hitSound, hitSound;
-
+var trex, trex_running, trex_collided;
+var ground, invisibleGround, groundImage;
+var cloud,cloud_img,cloudsGroup
+var obstacle6,obstacle1,obstacle2,obstacle3,obstacle4,obstacle5,obstaclesGroup,obstacle;
+var count=0;
 function preload(){
-  // scoreSound = loadSound('score.mp3');
-  // wall_hitSound = loadSound('wall_hit.mp3');
-  // hitSound = loadSound('hit.mp3');
+  trex_running = loadAnimation("trex1.png","trex3.png","trex4.png");
+  trex_collided = loadImage("trex_collided.png");
+  
+  groundImage = loadImage("ground2.png")
+  cloudImage =loadImage("cloud.png")
+  obstacle1=loadImage("obstacle1.png")
+  obstacle2=loadImage("obstacle2.png")
+  obstacle3=loadImage("obstacle3.png")
+  obstacle4=loadImage("obstacle4.png")
+  obstacle5=loadImage("obstacle5.png")
+  obstacle6=loadImage("obstacle6.png")
+  
 }
 
 function setup() {
+  createCanvas(600, 200);
   
-createCanvas(400,400);
-
-//create a user paddle sprite
-userPaddle = createSprite(390,200,10,70);
-
-//create a computer paddle sprite
-computerPaddle = createSprite(10,200,10,70);
-
-//create the pong ball
-ball = createSprite(200,200,12,12);
-
-computerScore = 0;
-playerScore = 0;
-gameState = "serve";
+  trex = createSprite(50,180,20,50);
+  trex.addAnimation("running", trex_running);
+  trex.scale = 0.5;
+  
+  ground = createSprite(200,180,400,20);
+  ground.addImage("ground",groundImage);
+  ground.x = ground.width /2;
+  ground.velocityX = -2;
+  
+  invisibleGround = createSprite(200,190,400,10);
+  invisibleGround.visible = false;
+  cloudsGroup=createGroup();
+  obstaclesGroup=createGroup();
 }
 
-function draw() {  
-  //fill the computer screen with white color
-  background("white");
-  edges = createEdgeSprites();
-  //display Scores
-  text(computerScore,170,20);
-  text(playerScore, 230,20);
-
-  //draw dotted lines
-  for (var i = 0; i < 400; i+=20) {
-     line(200,i,200,i+10);
+function draw() {
+  background("black");
+  
+  if(keyDown("space")) {
+    trex.velocityY = -10;
   }
-
-  if (gameState === "serve") {
-    text("Press Space to Serve",150,180);
+  
+  trex.velocityY = trex.velocityY + 0.10
+  
+  if (ground.x < 0){
+    ground.x = ground.width/2;
   }
-
-  if (gameState === "over") {
-    text("Game Over!",170,160);
-    text("Press 'R' to Restart",150,180);
-  }
-
-  if (keyDown("r")) {
-    gameState = "serve";
-    computerScore = 0;
-    playerScore = 0;
-  }
-
-
-  //give velocity to the ball when the user presses play
-  //assign random velocities later for fun
-  if (keyDown("space") && gameState == "serve") {
-    ball.velocityX = 5;
-    ball.velocityY = 5;
-    gameState = "play";
-  }
-
-  //make the userPaddle move with the mouse
-  userPaddle.y = World.mouseY;
-
-
-
-  //make the ball bounce off the user paddle
-  if(ball.isTouching(userPaddle)){
-    //hitSound.play();
-    ball.x = ball.x - 5;
-    ball.velocityX = -ball.velocityX;
-  }
-
-  //make the ball bounce off the computer paddle
-  if(ball.isTouching(computerPaddle)){
-    //hitSound.play();
-    ball.x = ball.x + 5;
-    ball.velocityX = -ball.velocityX;
-  }
-
-  //place the ball back in the centre if it crosses the screen
-  if(ball.x > 400 || ball.x < 0){
-    //scoreSound.play();
-
-  if (ball.x < 0) {
-      playerScore++;
-    }
-    else {
-      computerScore++;
-    }
-
-    ball.x = 200;
-    ball.y = 200;
-    ball.velocityX = 0;
-    ball.velocityY = 0;
-    gameState = "serve";
-
-    if (computerScore=== 5 || playerScore === 5){
-      gameState = "over";
-    }
-  }
-
-  //make the ball bounce off the top and bottom walls
-  if (ball.isTouching(edges[2]) || ball.isTouching(edges[3])) {
-    ball.bounceOff(edges[2]);
-    ball.bounceOff(edges[3]);
-   // wall_hitSound.play();
-  }
-
-  //add AI to the computer paddle so that it always hits the ball
-  computerPaddle.y = ball.y;
+  
+  trex.collide(invisibleGround);
+  spawnClouds();
+  spawnObstacles()
+  count =count+Math.round(getFrameRate()/60)
+  textSize(15)
+  text("Score"+count,500,50)
   drawSprites();
+}
+
+function spawnClouds() {
+  //write code here to spawn the clouds
+  if (World.frameCount % 60 === 0) {
+    var cloud = createSprite(600,80,40,10);
+    cloud.y = Math.round(random(10,100))
+    cloud.addImage(cloudImage);
+    cloud.scale = 0.5;
+    cloud.velocityX = -3;
+    
+     //assign lifetime to the variable
+    cloud.lifetime = 200
+    
+    //adjust the depth
+    cloud.depth = trex.depth;
+    trex.depth = trex.depth + 1;
+    cloudsGroup.add(cloud)
+  }
+}
+
+function spawnObstacles() {
+  if(World.frameCount % 60 === 0) {
+    var obstacle = createSprite(600,165,10,40);
+    obstacle.velocityX = -6;
+    
+    //generate random obstacles
+    var rand =Math.round(random(1,6));
+    switch(rand){
+      case 1:obstacle.addImage(obstacle1)  
+      break;
+      case 2:obstacle.addImage(obstacle2)
+      break;
+      case 3:obstacle.addImage(obstacle3)
+      break;
+      case 4:obstacle.addImage(obstacle4)
+      break;
+      case 5:obstacle.addImage(obstacle5)
+      break;
+      case 6:obstacle.addImage(obstacle6)
+      break;
+      default:break;
+    }
+      
+    
+    //assign scale and lifetime to the obstacle           
+    obstacle.scale = 0.5;
+    obstacle.lifetime = 100;
+    obstaclesGroup.add(obstacle)
+  }
 }
